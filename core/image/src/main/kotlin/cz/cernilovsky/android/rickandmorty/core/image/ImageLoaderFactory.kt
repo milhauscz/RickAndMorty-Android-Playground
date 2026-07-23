@@ -1,0 +1,52 @@
+package cz.cernilovsky.android.rickandmorty.core.image
+
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.annotation.ExperimentalCoilApi
+import coil3.disk.DiskCache
+import coil3.memory.MemoryCache
+import coil3.network.ktor3.KtorNetworkFetcherFactory
+import coil3.request.crossfade
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import okio.Path.Companion.toPath
+
+private const val DISK_CACHE_MAX_BYTES = 64L * 1024 * 1024 // 64 MB
+private const val MEMORY_CACHE_PERCENT = 0.25
+private const val HTTP_MAX_CONNECTIONS = 1000
+private const val HTTP_MAX_CONNECTIONS_PER_ROUTE = 100
+
+// Dedicated client for image loading. CIO (instead of the HttpURLConnection-based
+// Android engine) avoids the ~5 connections-per-host limit that stalls many
+// concurrent image requests during fast scrolling on real devices.
+private val imageHttpClient: HttpClient =
+    HttpClient(CIO) {
+        engine {
+            maxConnectionsCount = HTTP_MAX_CONNECTIONS
+            endpoint.maxConnectionsPerRoute = HTTP_MAX_CONNECTIONS_PER_ROUTE
+        }
+    }
+
+@OptIn(ExperimentalCoilApi::class)
+fun createImageLoader(context: PlatformContext): ImageLoader =
+    ImageLoader
+        .Builder(context)
+        .components {
+            add(KtorNetworkFetcherFactory(httpClient = imageHttpClient))
+        }.memoryCache {
+            MemoryCache
+                .Builder()
+                .maxSizePercent(context, MEMORY_CACHE_PERCENT)
+                .build()
+        }.diskCache {
+            DiskCache
+                .Builder()
+                .directory(
+                    context.cacheDir
+                        .resolve("image_cache")
+                        .absolutePath
+                        .toPath(),
+                ).maxSizeBytes(DISK_CACHE_MAX_BYTES)
+                .build()
+        }.crossfade(true)
+        .build()

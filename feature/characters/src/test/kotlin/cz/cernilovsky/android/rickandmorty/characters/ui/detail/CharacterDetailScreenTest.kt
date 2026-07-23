@@ -1,0 +1,181 @@
+package cz.cernilovsky.android.rickandmorty.characters.ui.detail
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasProgressBarRangeInfo
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import cz.cernilovsky.android.rickandmorty.characters.domain.model.CharacterGender
+import cz.cernilovsky.android.rickandmorty.characters.domain.model.CharacterStatus
+import cz.cernilovsky.android.rickandmorty.core.designsystem.R
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import kotlin.test.assertTrue
+
+@RunWith(AndroidJUnit4::class)
+class CharacterDetailScreenTest {
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    private val detail =
+        UiCharacterDetail(
+            id = 1,
+            name = "Rick Sanchez",
+            image = "",
+            status = CharacterStatus.Alive,
+            species = "Human",
+            type = "",
+            gender = CharacterGender.Male,
+            originName = "Earth (C-137)",
+            origin = null,
+            locationName = "Citadel of Ricks",
+            location = null,
+            episodes =
+                listOf(
+                    UiEpisode(
+                        id = 1,
+                        name = "Pilot",
+                        airDate = "December 2, 2013",
+                        episode = "S01E01",
+                    ),
+                ),
+        )
+
+    @Test
+    fun content_showsOriginAndEpisode() {
+        composeTestRule.setContent {
+            MaterialTheme {
+                CharacterDetailScreen(
+                    uiState = CharacterDetailUiState(detail = detail, isLoading = false),
+                    onBack = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithTag(CHARACTER_DETAIL_CONTENT_TEST_TAG)
+            .performScrollToNode(hasText("Earth (C-137)"))
+        composeTestRule.onNodeWithText("Earth (C-137)").assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithTag(CHARACTER_DETAIL_CONTENT_TEST_TAG)
+            .performScrollToNode(hasText("S01E01 - Pilot"))
+        composeTestRule.onNodeWithText("S01E01 - Pilot").assertIsDisplayed()
+    }
+
+    @Test
+    fun content_showsTypeWhenPresent() {
+        composeTestRule.setContent {
+            MaterialTheme {
+                CharacterDetailScreen(
+                    uiState = CharacterDetailUiState(detail = detail.copy(type = "Superhuman"), isLoading = false),
+                    onBack = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithTag(CHARACTER_DETAIL_CONTENT_TEST_TAG)
+            .performScrollToNode(hasText("Superhuman"))
+        composeTestRule.onNodeWithText("Superhuman").assertIsDisplayed()
+    }
+
+    @Test
+    fun content_hidesTypeWhenBlank() {
+        composeTestRule.setContent {
+            MaterialTheme {
+                CharacterDetailScreen(
+                    uiState = CharacterDetailUiState(detail = detail.copy(type = ""), isLoading = false),
+                    onBack = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Type").assertDoesNotExist()
+    }
+
+    @Test
+    fun loading_showsProgressIndicator() {
+        composeTestRule.setContent {
+            MaterialTheme {
+                CharacterDetailScreen(
+                    uiState = CharacterDetailUiState(detail = null, isLoading = true),
+                    onBack = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeTestRule
+            .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun error_showsRetryAndInvokesCallback() {
+        var retried = false
+        composeTestRule.setContent {
+            MaterialTheme {
+                CharacterDetailScreen(
+                    uiState =
+                        CharacterDetailUiState(
+                            detail = null,
+                            isLoading = false,
+                            errorMessage = R.string.error_unknown,
+                        ),
+                    onBack = {},
+                    onRetry = { retried = true },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Retry").performClick()
+
+        assertTrue(retried)
+    }
+
+    @Test
+    fun detailWithError_showsCachedContentAndRetry() {
+        // Detail is served from the local cache, so a failed refresh must surface an inline error
+        // *alongside* the cached content instead of replacing it.
+        var retried = false
+        composeTestRule.setContent {
+            MaterialTheme {
+                CharacterDetailScreen(
+                    uiState =
+                        CharacterDetailUiState(
+                            detail = detail,
+                            isLoading = false,
+                            errorMessage = R.string.error_unknown,
+                        ),
+                    onBack = {},
+                    onRetry = { retried = true },
+                )
+            }
+        }
+
+        // The cached content is still rendered.
+        composeTestRule
+            .onNodeWithTag(CHARACTER_DETAIL_CONTENT_TEST_TAG)
+            .performScrollToNode(hasText("Earth (C-137)"))
+        composeTestRule.onNodeWithText("Earth (C-137)").assertIsDisplayed()
+
+        // The inline error retry is shown at the end and works.
+        composeTestRule
+            .onNodeWithTag(CHARACTER_DETAIL_CONTENT_TEST_TAG)
+            .performScrollToNode(hasText("Retry"))
+        composeTestRule.onNodeWithText("Retry").performClick()
+
+        assertTrue(retried)
+    }
+}
