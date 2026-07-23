@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Errors -->
+    <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="error_no_internet">No internet connection. Check your network and try again.</string>
+    <string name="error_timeout">The request timed out. Please try again.</string>
+    <string name="error_too_many_requests">Too many requests. Please wait a moment and try again.</string>
+    <string name="error_server">The server is currently unavailable. Please try again later.</string>
+    <string name="error_serialization">Received unexpected data from the server.</string>
+    <string name="error_not_found">This page must have slipped into the 404th dimension. Rick is currently working on a portal to get it back.</string>
+</resources>
