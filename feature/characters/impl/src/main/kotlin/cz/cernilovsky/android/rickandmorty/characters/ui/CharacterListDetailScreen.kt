@@ -314,6 +314,7 @@ private fun CharacterDetailPane(
                 characterId = character.id,
                 onBack = onBack,
                 showBackButton = showBackButton,
+                enableSharedElement = page == pagerState.settledPage,
                 modifier = Modifier.fillMaxSize(),
                 imageHeight = imageHeight,
                 contentWindowInsets = contentWindowInsets,
