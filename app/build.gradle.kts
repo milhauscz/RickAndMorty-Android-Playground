@@ -17,9 +17,9 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.designsystem)
     implementation(projects.core.image)
-    implementation(projects.feature.episode)
-    implementation(projects.feature.location)
-    implementation(projects.feature.characters)
+    implementation(projects.feature.episode.impl)
+    implementation(projects.feature.location.impl)
+    implementation(projects.feature.characters.impl)
 
     implementation(libs.koin.core)
     implementation(libs.koin.android)

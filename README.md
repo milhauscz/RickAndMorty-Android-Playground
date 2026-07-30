@@ -1,3 +1,5 @@
+![Rick and Morty Android playground app](./docs/images/Rick_And_Morty_Android_banner.png)
+
 # RickAndMorty-Android-Playground
 
 A native Android app for browsing characters from the [Rick and Morty API](https://rickandmortyapi.com/),
@@ -7,6 +9,20 @@ Ported from a sibling Kotlin Multiplatform project built with Compose Multiplatf
 be a playground for Android-only APIs the multiplatform stack doesn't expose — starting with
 `NavigableListDetailPaneScaffold`, unavailable in Compose Multiplatform, which replaces the
 manually-wired `ListDetailPaneScaffold` + `PredictiveBackHandler` the original app needed.
+
+## Screenshots
+
+![Playground app animation demo](./docs/images/app-demo.gif) ![Characters list](./docs/screenshots/list.png) ![Filters](./docs/screenshots/filters.png) ![Character Detail](./docs/screenshots/detail.png)
+
+Adaptive two-pane list/detail layout on expanded-width windows (tablets, landscape):
+
+![Two/pane list/detail](./docs/screenshots/two-pane.png)
+
+Navigation and shared-element transitions:
+
+<p align="center">
+  <img src="docs/images/app-demo.gif" width="280" alt="Navigation and shared-element transition demo" />
+</p>
 
 ## Features
 
@@ -34,21 +50,28 @@ The app follows a modularized, Now-in-Android-style structure with a clean
 ```
 :app (umbrella: App, navigation, DI aggregation, MainActivity)
   │
-  ├──► :feature:characters ──► :feature:episode
-  │                        └─► :feature:location
+  ├──► :feature:characters:impl ──► :feature:characters:api
+  │                            ├──► :feature:episode:api
+  │                            └──► :feature:location:api
   │
-  ├──► :feature:episode ─┐
-  ├──► :feature:location ┤
-  │                      ▼
+  ├──► :feature:episode:impl ──► :feature:episode:api
+  ├──► :feature:location:impl ──► :feature:location:api
+  │
   └──► :core:designsystem, :core:network, :core:database,
        :core:image, :core:common
 ```
 
+Each feature is split into **api** (domain models + repository interfaces) and **impl**
+(data layer, DI, and — for characters — UI). `:feature:characters:impl` depends only on
+**api** modules of other features, so cross-feature data-layer coupling is enforced at compile time.
+
 | Module | Responsibility |
 | --- | --- |
 | `:app` | Umbrella module: `App` composable, type-safe navigation, `initKoin` aggregation, `MainActivity`. |
-| `:feature:characters` | List, detail, filters, and two-pane screens with their ViewModels, use cases, repository, and DTOs. |
-| `:feature:episode` / `:feature:location` | Data-only features (repository + data sources + mappers) consumed by the character detail. |
+| `:feature:characters:api` | Domain models (`Character`, `CharacterDetail`, …) and `CharactersRepository`. |
+| `:feature:characters:impl` | Use cases, data layer, Compose UI, ViewModels, and Koin module. |
+| `:feature:episode:api` / `:feature:location:api` | Domain models and repository interfaces. |
+| `:feature:episode:impl` / `:feature:location:impl` | Data sources, repository implementations, mappers, and Koin modules. |
 | `:core:common` | `Result`/`DataError` result types, shared domain models, `AppBuildConfig`. |
 | `:core:network` | Ktor `HttpClient` factory, `safeCall` wrapper, and the network Koin module. |
 | `:core:database` | Room database, all entities/DAOs/converters (KSP runs only here), and the database Koin module. |
@@ -62,7 +85,7 @@ Shared Gradle setup lives in the `build-logic` included build as precompiled con
 so a module's build file is typically just a plugin id plus its dependencies:
 
 - `rickandmorty.android.library` — Android library target, namespace, unit tests, lint.
-- `rickandmorty.android.feature` — the above plus Compose, Koin, and lifecycle for UI features.
+- `rickandmorty.android.feature` — the above plus Compose, Koin, and lifecycle for UI **impl** modules.
 - `rickandmorty.android.compose` — Compose BOM + core artifacts, layered onto whichever base Android
   plugin the consumer already applied.
 - `rickandmorty.android.application` — for `:app`.
