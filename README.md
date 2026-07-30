@@ -18,12 +18,6 @@ Adaptive two-pane list/detail layout on expanded-width windows (tablets, landsca
 
 ![Two/pane list/detail](./docs/screenshots/two-pane.png)
 
-Navigation and shared-element transitions:
-
-<p align="center">
-  <img src="docs/images/app-demo.gif" width="280" alt="Navigation and shared-element transition demo" />
-</p>
-
 ## Features
 
 - **Character list** with endless scrolling backed by Paging 3 and a `RemoteMediator`,
