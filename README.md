@@ -5,10 +5,9 @@
 A native Android app for browsing characters from the [Rick and Morty API](https://rickandmortyapi.com/),
 built with Jetpack Compose and a fully modularized, offline-first architecture.
 
-Ported from a sibling Kotlin Multiplatform project built with Compose Multiplatform, this app exists to
-be a playground for Android-only APIs the multiplatform stack doesn't expose — starting with
-`NavigableListDetailPaneScaffold`, unavailable in Compose Multiplatform, which replaces the
-manually-wired `ListDetailPaneScaffold` + `PredictiveBackHandler` the original app needed.
+This app is a playground for Android-only APIs — starting with `NavigableListDetailPaneScaffold`,
+which provides an adaptive list/detail layout without manually wiring `ListDetailPaneScaffold` and
+`PredictiveBackHandler`.
 
 ## Screenshots
 
@@ -133,6 +132,25 @@ Unit and UI (Robolectric) tests run on the JVM host across all modules:
 ```bash
 ./gradlew test
 ```
+
+Device instrumentation tests live in `:app` and require a connected device or emulator:
+
+```bash
+./gradlew :app:connectedDebugAndroidTest
+```
+
+## CI/CD
+
+A [`.gitlab-ci.yml`](.gitlab-ci.yml) pipeline is included to demonstrate CI/CD thinking — merge-request
+gates (lint, test, debug build) and an automated release flow on the `development` branch. **It has
+not been run against a live GitLab instance yet**; treat it as a reference configuration until
+verified end-to-end.
+
+## Release signing
+
+Release builds enable R8 shrinking with rules in `app/proguard-rules.pro`. Signing is optional:
+copy `keystore.properties.example` to `keystore.properties` (gitignored) or set the `RELEASE_*`
+environment variables in CI. Without a keystore, `assembleRelease` still produces an unsigned APK.
 
 ## Code quality
 

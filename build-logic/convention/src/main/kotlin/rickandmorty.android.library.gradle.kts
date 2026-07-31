@@ -30,8 +30,8 @@ android {
 
 dependencies {
     add("testImplementation", catalog.findLibrary("kotlin-test").get())
-    // Binds kotlin.test's `@Test`/assertions to JUnit4, since (unlike the KMP Android host-test
-    // target) plain Android's unit test target does not wire this in automatically.
+    // Binds kotlin.test's `@Test`/assertions to JUnit4; plain Android's unit test target does not
+    // wire this in automatically.
     add("testImplementation", catalog.findLibrary("kotlin-testJunit").get())
     add("testImplementation", catalog.findLibrary("kotlinx-coroutines-test").get())
     add("testImplementation", catalog.findLibrary("junit").get())

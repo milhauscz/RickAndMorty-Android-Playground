@@ -13,6 +13,7 @@ android {
         applicationId = "cz.cernilovsky.android.rickandmorty"
         minSdk = androidMinSdk
         targetSdk = androidTargetSdk
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // versionCode/versionName live in app/build.gradle.kts, not here: they're this specific
         // app's release identity, not something every consumer of this convention plugin shares.
     }
@@ -25,9 +26,16 @@ android {
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
+
+    configureReleaseSigning(project)
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
