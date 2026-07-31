@@ -1,5 +1,5 @@
 default:
-  image: cernilovsky/android-kmp:jdk17
+  image: cernilovsky/android:jdk17
   before_script:
     - export GRADLE_USER_HOME="$CI_PROJECT_DIR/.gradle"
   cache:
@@ -7,13 +7,13 @@ default:
     paths:
       - .gradle/
 
-# Only two pipeline types exist: verifying a merge request, and releasing a push to development
-# (normally an MR merge commit). Everything else (direct pushes to other branches, etc.) gets no
-# pipeline at all.
+# Pipelines run on merge requests, pushes to development, and manual "Run pipeline" from the GitLab
+# UI (web). Direct pushes to other branches get no pipeline.
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "development"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
 
 stages:
   - lint
@@ -21,11 +21,12 @@ stages:
   - build
   - release
 
-# Quality gate, merge request pipelines only. The gate for development is the MR that got merged
-# into it, so a push to development skips straight to the release stage instead of repeating it.
+# Quality gate for merge requests and on-demand web runs. Pushes to development skip straight to
+# the release stage instead of repeating it.
 .merge_request:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
 
 lint:
   extends: .merge_request
@@ -57,8 +58,7 @@ build:
       - app/build/outputs/apk/debug/*.apk
     expire_in: 7 days
 
-# Builds the release APK and derives the release tag from app/build.gradle.kts' versionName,
-# passing both to the publish-release job via a dotenv artifact.
+# Builds the release APK and passes the release tag to publish-release via a dotenv artifact.
 release:
   stage: release
   rules:
@@ -70,17 +70,16 @@ release:
       cat <<EOF >> release.env
       TAG=v$VERSION
       RELEASE_JOB_ID=$CI_JOB_ID
+      APK_ARTIFACT_PATH=app/build/outputs/apk/release/$(basename "$(ls app/build/outputs/apk/release/app-*.apk | head -1)")
       EOF
   artifacts:
     paths:
-      - app/build/outputs/apk/release/app-release-unsigned.apk
+      - app/build/outputs/apk/release/*.apk
     reports:
       dotenv: release.env
     expire_in: 30 days
 
-# Creates the git tag and the GitLab Release from it in one step (release-cli handles tag
-# creation as part of creating the Release, so no separate `git tag`/push is needed) and links
-# the APK built by the release job as a release asset.
+# Links the APK built by the release job as a release asset (no re-upload).
 publish-release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
@@ -88,7 +87,6 @@ publish-release:
     - if: '$CI_COMMIT_BRANCH == "development"'
   needs:
     - job: release
-      artifacts: true
   script:
     - echo "Publishing $TAG for $CI_COMMIT_SHORT_SHA"
   release:
@@ -97,5 +95,5 @@ publish-release:
     ref: '$CI_COMMIT_SHA'
     assets:
       links:
-        - name: 'app-release-unsigned.apk'
-          url: '${CI_PROJECT_URL}/-/jobs/${RELEASE_JOB_ID}/artifacts/raw/app/build/outputs/apk/release/app-release-unsigned.apk'
+        - name: 'app-release.apk'
+          url: '${CI_PROJECT_URL}/-/jobs/${RELEASE_JOB_ID}/artifacts/raw/${APK_ARTIFACT_PATH}'

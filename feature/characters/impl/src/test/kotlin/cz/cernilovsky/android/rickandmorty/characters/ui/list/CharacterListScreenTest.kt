@@ -63,6 +63,31 @@ class CharacterListScreenTest {
     }
 
     @Test
+    fun loadingItemsError_showsRetryButton() {
+        composeTestRule.setContent {
+            MaterialTheme {
+                LoadingItemsError(errorMessage = R.string.error_unknown, onRetry = {})
+            }
+        }
+
+        composeTestRule.onNodeWithText("Retry").assertIsDisplayed()
+    }
+
+    @Test
+    fun loadingItemsError_onRetryClick_invokesCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            MaterialTheme {
+                LoadingItemsError(errorMessage = R.string.error_unknown, onRetry = { clicked = true })
+            }
+        }
+
+        composeTestRule.onNodeWithText("Retry").performClick()
+
+        assertTrue(clicked)
+    }
+
+    @Test
     fun character_showsNameAndSpecies() {
         val character =
             UiCharacter(

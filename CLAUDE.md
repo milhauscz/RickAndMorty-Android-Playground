@@ -5,9 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project
 
 Native Android (Jetpack Compose) app browsing the [Rick and Morty API](https://rickandmortyapi.com/).
-Ported from a sibling Kotlin Multiplatform project (`cz.cernilovsky.kmp.rickandmorty`) to serve as a
-playground for Android-only APIs the multiplatform stack doesn't expose — starting with
-`NavigableListDetailPaneScaffold`. Modularized, offline-first (Room is the single source of truth),
+A playground for Android-only APIs — starting with `NavigableListDetailPaneScaffold`. Modularized,
+offline-first (Room is the single source of truth),
 Now-in-Android-style architecture. See `README.md` for the feature overview and module graph.
 
 ## Commands
@@ -28,15 +27,14 @@ Run Gradle with a plain `./gradlew` (on Windows `.\gradlew`) invocation — no `
 
 # App
 ./gradlew :app:installDebug
+./gradlew :app:connectedDebugAndroidTest   # device/emulator instrumentation tests
 ```
 
 Requirements: JDK 17+, Android SDK (compileSdk 37).
 
 ### Verifying a change
 
-A full `./gradlew build` fails on pre-existing detekt/kotlinter debt, not just your change. To verify
-your own work, run the relevant module's `test` (add `-x lintKotlin -x detekt` if you need `build` but
-want to skip the style gates).
+Run the relevant module's `test`, or `./gradlew build` for a full verification including style gates.
 
 ## Architecture
 
@@ -106,13 +104,13 @@ Unit tests (pure JVM) and Robolectric/Compose UI tests both live under `src/test
 JVM host via `./gradlew test`. Fakes/fixtures for shared use live alongside the tests that need them
 (e.g. `CharacterFixtures.kt`, `FakeRepositories.kt` in `:feature:characters:impl`).
 
-### Known deviations from the KMP source project
+### Known platform adaptations
 
 - `data class BuildConfig(isDebug)` was renamed to `AppBuildConfig` in `:core:common` to avoid reading
   as the AGP-generated `BuildConfig` class.
 - Material3's `HorizontalUncontainedCarousel` (episode carousel) is replaced with a plain `LazyRow`:
   its opt-in marker (`ExperimentalMaterial3ExpressiveApi`) compiles as Kotlin-internal in the resolved
   material3 artifact and isn't usable from outside the module.
-- The `headlineSmallEmphasized`/`labelMediumEmphasized` typography variants used in the KMP UI aren't
+- The `headlineSmallEmphasized`/`labelMediumEmphasized` typography variants used in the original UI aren't
   part of this Compose BOM's public `Typography` surface; the character list card uses the plain
   `headlineSmall`/`labelMedium` styles instead.

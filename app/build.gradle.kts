@@ -28,4 +28,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.window.core)
+    implementation(libs.androidx.concurrent.futures)
+
+    androidTestImplementation(libs.androidx.testExt.junit)
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 }
