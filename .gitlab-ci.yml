@@ -1,3 +1,7 @@
+# GitLab CI pipeline for merge-request checks and automated releases.
+# NOTE: This configuration has not been run on GitLab yet — it documents the intended CI/CD
+# workflow and may need tweaks (runner image, signing) before first use.
+
 default:
   image: cernilovsky/android:jdk17
   before_script:
@@ -23,25 +27,32 @@ stages:
 
 # Quality gate for merge requests and on-demand web runs. Pushes to development skip straight to
 # the release stage instead of repeating it.
-.merge_request:
+.verify:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
 lint:
-  extends: .merge_request
+  extends: .verify
   stage: lint
   script:
     - ./gradlew lintKotlin detekt :konsist:test
+  artifacts:
+    when: on_failure
+    paths:
+      - "**/build/reports/detekt/**"
+    reports:
+      junit: "konsist/build/test-results/test/*.xml"
+    expire_in: 30 days
 
 test:
-  extends: .merge_request
+  extends: .verify
   stage: test
   script:
     # Root-level task (no module prefix) runs unit tests across every module, not just :app.
     - ./gradlew test
   artifacts:
-    when: always
+    when: on_failure
     paths:
       - "**/build/test-results/test*UnitTest/*.xml"
     reports:
@@ -49,7 +60,7 @@ test:
     expire_in: 30 days
 
 build:
-  extends: .merge_request
+  extends: .verify
   stage: build
   script:
     - ./gradlew :app:assembleDebug
@@ -58,7 +69,8 @@ build:
       - app/build/outputs/apk/debug/*.apk
     expire_in: 7 days
 
-# Builds the release APK and passes the release tag to publish-release via a dotenv artifact.
+# Builds the release APK and derives the release tag from versionName, passing both to
+# publish-release via a dotenv artifact.
 release:
   stage: release
   rules:
@@ -87,6 +99,7 @@ publish-release:
     - if: '$CI_COMMIT_BRANCH == "development"'
   needs:
     - job: release
+      artifacts: true
   script:
     - echo "Publishing $TAG for $CI_COMMIT_SHORT_SHA"
   release:
