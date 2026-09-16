@@ -9,6 +9,14 @@ This app is a playground for Android-only APIs — starting with `NavigableListD
 which provides an adaptive list/detail layout without manually wiring `ListDetailPaneScaffold` and
 `PredictiveBackHandler`.
 
+## Project versions
+
+| Version | Description | GitLab | GitHub |
+| --- | --- | --- | --- |
+| **Native Android** *(you are here)* | Native Jetpack Compose sample app exploring Android-only APIs (adaptive list/detail) | [GitLab](https://gitlab.com/milhauscz-mobile/rickandmorty-android-playground) | [GitHub](https://github.com/milhauscz/RickAndMorty-Android-Playground) |
+| KMP Playground (`main`) | Kotlin Multiplatform sample app (Android + iOS) with the same offline-first architecture | [GitLab](https://gitlab.com/milhauscz-mobile/RickAndMorty-KMP-Playground/-/tree/main) | [GitHub](https://github.com/milhauscz/RickAndMorty-KMP-Playground/tree/main) |
+| KMP SDK (`feature/sdk-showcase`) | Reusable SDKs (headless, widget, Swift interop) published to Maven, plus a consumer demo app. Includes a functioning GitLab CI/CD pipeline. | [GitLab](https://gitlab.com/milhauscz-mobile/RickAndMorty-KMP-Playground/-/tree/feature/sdk-showcase) | [GitHub](https://github.com/milhauscz/RickAndMorty-KMP-Playground/tree/feature/sdk-showcase) |
+
 ## Screenshots
 
 ![Playground app animation demo](./docs/images/app-demo.gif) ![Characters list](./docs/screenshots/list.png) ![Filters](./docs/screenshots/filters.png) ![Character Detail](./docs/screenshots/detail.png)
